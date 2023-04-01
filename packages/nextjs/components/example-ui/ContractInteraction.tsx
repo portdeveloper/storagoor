@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
-import { ArrowSmallRightIcon } from "@heroicons/react/24/outline";
+import Blockies from "react-blockies";
 
 export const ContractInteraction = () => {
   const [contractAddress, setContractAddress] = useState("");
@@ -14,9 +14,11 @@ export const ContractInteraction = () => {
   const [contractAddressError, setContractAddressError] = useState("");
   const [storageSlotPositionError, setStorageSlotPositionError] = useState("");
 
-  const provider = new ethers.providers.JsonRpcProvider(
-    "https://sepolia.infura.io/v3/86db127db1ef41458b5d68a82192984e",
+  const [selectedChain, setSelectedChain] = useState(
+    `https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`,
   );
+
+  const provider = new ethers.providers.JsonRpcProvider(selectedChain);
 
   // ADD TYPES TO THE FOLLOWING: isAddressValid isStorageSlotValid readStorageSlot
   const isAddressValid = (address: string): boolean => {
@@ -86,64 +88,104 @@ export const ContractInteraction = () => {
 
   return (
     <>
-      <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-        <span className="text-4xl sm:text-6xl text-black">Read a Storage Slot</span>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
+        <div className="px-4 sm:px-8 w-full max-w-5xl">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-8 text-center">Storagoor ( •̀ ω •́ )✧</h1>
+          <div className="w-full flex justify-center">
+            <form onSubmit={readStorageSlot} className="w-full max-w-md flex flex-col space-y-4">
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="chain" className="text-lg font-semibold">
+                  Chain
+                </label>
+                <select
+                  id="chain"
+                  className="input w-full bg-gray-700 rounded-none"
+                  value={selectedChain}
+                  onChange={e => {
+                    setSelectedChain(e.target.value);
+                  }}
+                >
+                  <option value={`https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Sepolia</option>
+                  <option value={`https://goerli.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Goerli</option>
+                  <option value={`https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Mainnet</option>
+                </select>
+              </div>
+              <div className="flex flex-col space-y-2 relative">
+                <label htmlFor="contractAddress" className="text-lg font-semibold">
+                  Contract Address
+                </label>
+                <input
+                  type="text"
+                  id="contractAddress"
+                  placeholder="Enter contract address"
+                  className="input w-full bg-gray-700 rounded-none"
+                  value={contractAddress}
+                  onChange={e => {
+                    setContractAddress(e.target.value);
+                    setContractAddressError("");
+                  }}
+                />
+                {isAddressValid(contractAddress) && (
+                  <Blockies
+                    className="absolute top-1/2 right-2 transform -translate-y-2 rounded-none"
+                    size={9}
+                    seed={contractAddress.toLowerCase()}
+                    scale={4}
+                  />
+                )}
+                {contractAddressError && <div className="text-red-600 text-sm">{contractAddressError}</div>}
+              </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
-          <input
-            type="text"
-            placeholder="Contract Address"
-            className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
-            value={contractAddress}
-            onChange={e => {
-              setContractAddress(e.target.value);
-              setContractAddressError("");
-            }}
-          />
-          {contractAddressError && <div className="text-red-600 text-sm mt-2">{contractAddressError}</div>}
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="storageSlotPosition" className="text-lg font-semibold">
+                  Storage Slot Position
+                </label>
+                <input
+                  type="text"
+                  id="storageSlotPosition"
+                  placeholder="Enter storage slot position"
+                  className="input w-full bg-gray-700 rounded-none"
+                  value={storageSlotPosition}
+                  onChange={e => {
+                    setStorageSlotPosition(e.target.value);
+                    setStorageSlotPositionError("");
+                  }}
+                />
+                {storageSlotPositionError && <div className="text-red-600 text-sm">{storageSlotPositionError}</div>}
+              </div>
 
-          <input
-            type="text"
-            placeholder="Storage Slot Position"
-            className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
-            value={storageSlotPosition}
-            onChange={e => {
-              setStorageSlotPosition(e.target.value);
-              setStorageSlotPositionError("");
-            }}
-          />
-          {storageSlotPositionError && <div className="text-red-600 text-sm mt-2">{storageSlotPositionError}</div>}
-
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
-              <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest `}
-                onClick={readStorageSlot}
-              >
-                <>
-                  Read <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
-                </>
+              <button type="submit" className="btn w-full py-2 bg-black text-white rounded-md">
+                Read
               </button>
-            </div>
+            </form>
           </div>
-        </div>
 
-        <div className="mt-4 flex gap-2 items-start">
-          <span className="text-sm leading-tight">Price:</span>
-          <div className="badge badge-warning">Free</div>
-        </div>
-
-        {hexValue !== "" && (
-          <div className="mt-8">
-            <div className="text-lg font-bold">Result:</div>
-            <div className="mt-2">
-              <div>Hexadecimal value: {hexValue}</div>
-              <div>Decimal value: {numberValue}</div>
-              <div>String value: {stringValue}</div>
-              <div>Address value: {addressValue}</div>
+          {hexValue !== "" && (
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-4">Result:</h2>
+              <table className="table w-full mx-auto">
+                <tbody>
+                  <tr>
+                    <td className="bg-gray-300 font-mono text-lg text-black">Hexadecimal value:</td>
+                    <td className="bg-gray-700 font-mono text-lg">{hexValue}</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-gray-300 font-mono text-lg text-black">Decimal value:</td>
+                    <td className="bg-gray-700 font-mono text-lg">{numberValue}</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-gray-300 font-mono text-lg text-black">String value:</td>
+                    <td className="bg-gray-700 font-mono text-lg">{stringValue}</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-gray-300 font-mono text-lg text-black">Address value:</td>
+                    <td className="bg-gray-700 font-mono text-lg">{addressValue}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
