@@ -10,6 +10,8 @@ const App = () => {
   const [contractAddress, setContractAddress] = useState("");
   const [storageSlotPosition, setStorageSlotPosition] = useState("");
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [hexValue, setHexValue] = useState("");
   const [numberValue, setNumberValue] = useState("");
   const [stringValue, setStringValue] = useState("");
@@ -24,7 +26,6 @@ const App = () => {
 
   const provider = new ethers.providers.JsonRpcProvider(selectedChain);
 
-  // ADD TYPES TO THE FOLLOWING: isAddressValid isStorageSlotValid readStorageSlot
   const isAddressValid = (address: string): boolean => {
     return Boolean(address) && ethers.utils.isAddress(address);
   };
@@ -33,32 +34,14 @@ const App = () => {
     return Boolean(storageSlot) && /^[0-9]+$/.test(storageSlot);
   };
 
-  useEffect(() => {
-    if (router.query.contractAddress && router.query.storageSlotPosition) {
-      setContractAddress(router.query.contractAddress as string);
-      setStorageSlotPosition(router.query.storageSlotPosition as string);
-      console.log("contractaddr and storageslotpos is not empty");
-    }
-  }, [router.query.contractAddress, router.query.storageSlotPosition]);
-
-  useEffect(() => {
-    if (contractAddress && storageSlotPosition) {
-      readStorageSlot(null);
-      console.log(contractAddress);
-      console.log(storageSlotPosition);
-    }
-  }, [contractAddress, storageSlotPosition]);
-
   const readStorageSlot = async (event: any) => {
     if (event) {
-      event.preventDefault(); // Prevent the default form submission behavior
+      event.preventDefault();
     }
 
-    // Clear any previous errors
     setContractAddressError("");
     setStorageSlotPositionError("");
 
-    // Validate the form fields
     let hasErrors = false;
 
     if (!isAddressValid(contractAddress)) {
@@ -80,13 +63,29 @@ const App = () => {
     if (hasErrors) {
       return;
     }
+    await readStorageSlotHelper();
+  };
 
+  useEffect(() => {
+    if (router.query.contractAddress && router.query.storageSlotPosition) {
+      const addressFromURL = router.query.contractAddress as string;
+      const slotFromURL = router.query.storageSlotPosition as string;
+
+      if (isAddressValid(addressFromURL) && isStorageSlotValid(slotFromURL)) {
+        setContractAddress(addressFromURL);
+        setStorageSlotPosition(slotFromURL);
+        readStorageSlotHelper(addressFromURL, slotFromURL);
+      }
+    }
+  }, [router.query.contractAddress, router.query.storageSlotPosition]);
+
+  const readStorageSlotHelper = async (address: string = contractAddress, slot: string = storageSlotPosition) => {
     try {
-      const position = "0x" + Number(storageSlotPosition).toString(16);
+      setIsLoading(true);
 
-      const storageSlot = await provider.getStorageAt(contractAddress, position);
+      const position = "0x" + Number(slot).toString(16);
 
-      console.log(`Hexadecimal value is: ${storageSlot}`);
+      const storageSlot = await provider.getStorageAt(address, position);
 
       const numberValue = parseInt(storageSlot.slice(2), 16).toString();
       const stringValue = String.fromCharCode(
@@ -96,9 +95,6 @@ const App = () => {
 
       const addressValue = "0x" + storageSlot.slice(26);
 
-      console.log(`Number value is: ${numberValue}`);
-      console.log(`String value is: ${stringValue}`);
-
       setHexValue(storageSlot);
       setNumberValue(numberValue);
       setStringValue(stringValue);
@@ -107,11 +103,14 @@ const App = () => {
       router.replace({
         pathname: router.pathname,
         query: {
-          contractAddress,
-          storageSlotPosition,
+          contractAddress: address,
+          storageSlotPosition: slot,
         },
       });
+
+      setIsLoading(false);
     } catch (err) {
+      setIsLoading(false);
       console.error(err);
     }
   };
@@ -188,6 +187,10 @@ const App = () => {
                 Read
               </button>
             </form>
+          </div>
+
+          <div className="text-l sm:text-2xl font-bold mt-2 text-center h-5">
+            {isLoading && <span>Reading the slot (✿◡‿◡)</span>}
           </div>
 
           {hexValue !== "" && (
