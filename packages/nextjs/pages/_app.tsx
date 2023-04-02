@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { ethers } from "ethers";
 import Blockies from "react-blockies";
 import "~~/styles/globals.css";
 
 const App = () => {
+  const router = useRouter();
+
   const [contractAddress, setContractAddress] = useState("");
   const [storageSlotPosition, setStorageSlotPosition] = useState("");
 
@@ -30,8 +33,26 @@ const App = () => {
     return Boolean(storageSlot) && /^[0-9]+$/.test(storageSlot);
   };
 
+  useEffect(() => {
+    if (router.query.contractAddress && router.query.storageSlotPosition) {
+      setContractAddress(router.query.contractAddress as string);
+      setStorageSlotPosition(router.query.storageSlotPosition as string);
+      console.log("contractaddr and storageslotpos is not empty");
+    }
+  }, [router.query.contractAddress, router.query.storageSlotPosition]);
+
+  useEffect(() => {
+    if (contractAddress && storageSlotPosition) {
+      readStorageSlot(null);
+      console.log(contractAddress);
+      console.log(storageSlotPosition);
+    }
+  }, [contractAddress, storageSlotPosition]);
+
   const readStorageSlot = async (event: any) => {
-    event.preventDefault(); // Prevent the default form submission behavior
+    if (event) {
+      event.preventDefault(); // Prevent the default form submission behavior
+    }
 
     // Clear any previous errors
     setContractAddressError("");
@@ -82,6 +103,14 @@ const App = () => {
       setNumberValue(numberValue);
       setStringValue(stringValue);
       setAddressValue(addressValue);
+
+      router.replace({
+        pathname: router.pathname,
+        query: {
+          contractAddress,
+          storageSlotPosition,
+        },
+      });
     } catch (err) {
       console.error(err);
     }
