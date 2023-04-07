@@ -1,119 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { ethers } from "ethers";
-import Blockies from "react-blockies";
+import React from "react";
+import ChainSelect from "../components/ChainSelect";
+import ContractAddressInput from "../components/ContractAddressInput";
+import ResultTable from "../components/ResultTable";
+import StorageSlotPositionInput from "../components/StorageSlotPositionInput";
+import { useStoragoor } from "../hooks/useStoragoor";
 import "~~/styles/globals.css";
 
 const App = () => {
-  const router = useRouter();
-
-  const [contractAddress, setContractAddress] = useState("");
-  const [storageSlotPosition, setStorageSlotPosition] = useState("");
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [hexValue, setHexValue] = useState("");
-  const [numberValue, setNumberValue] = useState("");
-  const [stringValue, setStringValue] = useState("");
-  const [addressValue, setAddressValue] = useState("");
-
-  const [contractAddressError, setContractAddressError] = useState("");
-  const [storageSlotPositionError, setStorageSlotPositionError] = useState("");
-
-  const [selectedChain, setSelectedChain] = useState(
-    `https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`,
-  );
-
-  const provider = new ethers.providers.JsonRpcProvider(selectedChain);
-
-  const isAddressValid = (address: string): boolean => {
-    return Boolean(address) && ethers.utils.isAddress(address);
-  };
-
-  const isStorageSlotValid = (storageSlot: string): boolean => {
-    return Boolean(storageSlot) && /^[0-9]+$/.test(storageSlot);
-  };
-
-  const readStorageSlot = async (event: any) => {
-    if (event) {
-      event.preventDefault();
-    }
-
-    setContractAddressError("");
-    setStorageSlotPositionError("");
-
-    let hasErrors = false;
-
-    if (!isAddressValid(contractAddress)) {
-      setContractAddressError("Invalid contract address.");
-      hasErrors = true;
-    }
-    if (!isStorageSlotValid(storageSlotPosition)) {
-      setStorageSlotPositionError("Invalid storage slot position.");
-      hasErrors = true;
-    }
-    if (!contractAddress) {
-      setContractAddressError("Contract address is required.");
-      hasErrors = true;
-    }
-    if (!storageSlotPosition) {
-      setStorageSlotPositionError("Storage slot position is required.");
-      hasErrors = true;
-    }
-    if (hasErrors) {
-      return;
-    }
-    await readStorageSlotHelper();
-  };
-
-  useEffect(() => {
-    if (router.query.contractAddress && router.query.storageSlotPosition) {
-      const addressFromURL = router.query.contractAddress as string;
-      const slotFromURL = router.query.storageSlotPosition as string;
-
-      if (isAddressValid(addressFromURL) && isStorageSlotValid(slotFromURL)) {
-        setContractAddress(addressFromURL);
-        setStorageSlotPosition(slotFromURL);
-        readStorageSlotHelper(addressFromURL, slotFromURL);
-      }
-    }
-  }, [router.query.contractAddress, router.query.storageSlotPosition]);
-
-  const readStorageSlotHelper = async (address: string = contractAddress, slot: string = storageSlotPosition) => {
-    try {
-      setIsLoading(true);
-
-      const position = "0x" + Number(slot).toString(16);
-
-      const storageSlot = await provider.getStorageAt(address, position);
-
-      const numberValue = parseInt(storageSlot.slice(2), 16).toString();
-      const stringValue = String.fromCharCode(
-        ...(storageSlot.slice(2).match(/.{1,2}/g) || []) // Provide a fallback empty array in case of null
-          .map(byte => parseInt(byte, 16)),
-      );
-
-      const addressValue = "0x" + storageSlot.slice(26);
-
-      setHexValue(storageSlot);
-      setNumberValue(numberValue);
-      setStringValue(stringValue);
-      setAddressValue(addressValue);
-
-      router.replace({
-        pathname: router.pathname,
-        query: {
-          contractAddress: address,
-          storageSlotPosition: slot,
-        },
-      });
-
-      setIsLoading(false);
-    } catch (err) {
-      setIsLoading(false);
-      console.error(err);
-    }
-  };
+  const {
+    selectedChain,
+    setSelectedChain,
+    contractAddress,
+    setContractAddress,
+    storageSlotPosition,
+    setStorageSlotPosition,
+    isLoading,
+    hexValue,
+    numberValue,
+    stringValue,
+    addressValue,
+    contractAddressError,
+    setContractAddressError,
+    storageSlotPositionError,
+    isAddressValid,
+    readStorageSlot,
+  } = useStoragoor();
 
   return (
     <>
@@ -122,67 +33,19 @@ const App = () => {
           <h1 className="text-2xl sm:text-3xl font-bold mb-8 text-center">Storagoor ( •̀ ω •́ )✧</h1>
           <div className="w-full flex justify-center">
             <form onSubmit={readStorageSlot} className="w-full max-w-md flex flex-col space-y-4">
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="chain" className="text-lg font-semibold">
-                  Chain
-                </label>
-                <select
-                  id="chain"
-                  className="input w-full bg-gray-700 rounded-none"
-                  value={selectedChain}
-                  onChange={e => {
-                    setSelectedChain(e.target.value);
-                  }}
-                >
-                  <option value={`https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Sepolia</option>
-                  <option value={`https://goerli.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Goerli</option>
-                  <option value={`https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`}>Mainnet</option>
-                </select>
-              </div>
-              <div className="flex flex-col space-y-2 relative">
-                <label htmlFor="contractAddress" className="text-lg font-semibold">
-                  Contract Address
-                </label>
-                <input
-                  type="text"
-                  id="contractAddress"
-                  placeholder="Enter contract address"
-                  className="input w-full bg-gray-700 rounded-none"
-                  value={contractAddress}
-                  onChange={e => {
-                    setContractAddress(e.target.value);
-                    setContractAddressError("");
-                  }}
-                />
-                {isAddressValid(contractAddress) && (
-                  <Blockies
-                    className="absolute top-1/2 right-2 transform -translate-y-2 rounded-none"
-                    size={9}
-                    seed={contractAddress.toLowerCase()}
-                    scale={4}
-                  />
-                )}
-                {contractAddressError && <div className="text-red-600 text-sm">{contractAddressError}</div>}
-              </div>
-
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="storageSlotPosition" className="text-lg font-semibold">
-                  Storage Slot Position
-                </label>
-                <input
-                  type="text"
-                  id="storageSlotPosition"
-                  placeholder="Enter storage slot position"
-                  className="input w-full bg-gray-700 rounded-none"
-                  value={storageSlotPosition}
-                  onChange={e => {
-                    setStorageSlotPosition(e.target.value);
-                    setStorageSlotPositionError("");
-                  }}
-                />
-                {storageSlotPositionError && <div className="text-red-600 text-sm">{storageSlotPositionError}</div>}
-              </div>
-
+              <ChainSelect selectedChain={selectedChain} setSelectedChain={setSelectedChain} />
+              <ContractAddressInput
+                contractAddress={contractAddress}
+                setContractAddress={setContractAddress}
+                isAddressValid={isAddressValid}
+                contractAddressError={contractAddressError}
+                setContractAddressError={setContractAddressError}
+              />
+              <StorageSlotPositionInput
+                storageSlotPosition={storageSlotPosition}
+                setStorageSlotPosition={setStorageSlotPosition}
+                storageSlotPositionError={storageSlotPositionError}
+              />
               <button type="submit" className="btn w-full py-2 bg-black text-white rounded-md">
                 Read
               </button>
@@ -194,31 +57,12 @@ const App = () => {
           </div>
 
           {hexValue !== "" && (
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-4">Result:</h2>
-              <div className="overflow-x-scroll">
-                <table className="table w-full mx-auto">
-                  <tbody>
-                    <tr>
-                      <td className="bg-gray-300 font-mono text-lg text-black">Hexadecimal value:</td>
-                      <td className="bg-gray-700 font-mono text-lg">{hexValue}</td>
-                    </tr>
-                    <tr>
-                      <td className="bg-gray-300 font-mono text-lg text-black">Decimal value:</td>
-                      <td className="bg-gray-700 font-mono text-lg">{numberValue}</td>
-                    </tr>
-                    <tr>
-                      <td className="bg-gray-300 font-mono text-lg text-black">String value:</td>
-                      <td className="bg-gray-700 font-mono text-lg">{stringValue}</td>
-                    </tr>
-                    <tr>
-                      <td className="bg-gray-300 font-mono text-lg text-black">Address value:</td>
-                      <td className="bg-gray-700 font-mono text-lg">{addressValue}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ResultTable
+              hexValue={hexValue}
+              numberValue={numberValue}
+              stringValue={stringValue}
+              addressValue={addressValue}
+            />
           )}
         </div>
       </div>
