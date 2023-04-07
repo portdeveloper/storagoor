@@ -9,7 +9,6 @@ Storagoor ( •̀ ω •́ )✧ is a web3 app that allows users to read storage 
 - Read Ethereum contract storage slots by providing the contract address and slot number
 - Automatically decode storage slot data into human-readable formats
 - Chain selection to switch between Ethereum networks
-- Wallet connection for using custom Ethereum providers
 - Responsive and user-friendly interface
 
 ## Requirements
