@@ -1,6 +1,6 @@
 # Storagoor ( •̀ ω •́ )✧
 
-![storagoor](storagoor.png)
+![storagoor](storagoor.gif)
 
 Storagoor ( •̀ ω •́ )✧ is a web3 app that allows users to read storage slots of Ethereum contracts.   It is derived from the Scaffold-Eth 2 template and uses Next.js, TypeScript, and Hardhat.
 
