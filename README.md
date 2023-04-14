@@ -2,6 +2,7 @@
 
 ![storagoor](storagoor.gif)
 
+Click the image below to be redirected to a VERY COOL YOUTUBE VIDEO ABOUT STORAGOOOOOOR
 [![Storagoor ( •̀ ω •́ )✧](https://img.youtube.com/vi/gj-wvpb_e6Q/0.jpg)](https://www.youtube.com/watch?v=gj-wvpb_e6Q)
 
 
