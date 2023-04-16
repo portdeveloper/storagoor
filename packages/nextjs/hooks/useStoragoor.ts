@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { CustomChain } from "../models/CustomChain";
 import { ethers } from "ethers";
 
 export const useStoragoor = () => {
@@ -17,6 +18,21 @@ export const useStoragoor = () => {
   const [contractAddressError, setContractAddressError] = useState("");
   const [storageSlotPositionError, setStorageSlotPositionError] = useState("");
   const provider = new ethers.providers.JsonRpcProvider(selectedChain);
+
+  const [customChains, setCustomChains] = useState<CustomChain[]>([]);
+
+  useEffect(() => {
+    const storedChains = localStorage.getItem("customChains");
+    if (storedChains) {
+      setCustomChains(JSON.parse(storedChains));
+    }
+  }, []);
+
+  const saveCustomChain = (customChain: CustomChain) => {
+    const newChains = [...customChains, customChain];
+    setCustomChains(newChains);
+    localStorage.setItem("customChains", JSON.stringify(newChains));
+  };
 
   const isAddressValid = (address: string): boolean => {
     return Boolean(address) && ethers.utils.isAddress(address);
@@ -110,6 +126,8 @@ export const useStoragoor = () => {
   return {
     selectedChain,
     setSelectedChain,
+    customChains,
+    saveCustomChain,
     contractAddress,
     setContractAddress,
     storageSlotPosition,

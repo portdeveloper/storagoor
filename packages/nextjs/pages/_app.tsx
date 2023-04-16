@@ -1,6 +1,8 @@
+// _app.tsx
 import React from "react";
 import ChainSelect from "../components/ChainSelect";
 import ContractAddressInput from "../components/ContractAddressInput";
+import CustomChainForm from "../components/CustomChainForm";
 import ResultTable from "../components/ResultTable";
 import StorageSlotPositionInput from "../components/StorageSlotPositionInput";
 import { useStoragoor } from "../hooks/useStoragoor";
@@ -24,6 +26,8 @@ const App = () => {
     storageSlotPositionError,
     isAddressValid,
     readStorageSlot,
+    customChains,
+    saveCustomChain,
   } = useStoragoor();
 
   return (
@@ -33,7 +37,11 @@ const App = () => {
           <h1 className="text-2xl sm:text-3xl font-bold mb-8 text-center">Storagoor ( •̀ ω •́ )✧</h1>
           <div className="w-full flex justify-center">
             <form onSubmit={readStorageSlot} className="w-full max-w-md flex flex-col space-y-4">
-              <ChainSelect selectedChain={selectedChain} setSelectedChain={setSelectedChain} />
+              <ChainSelect
+                selectedChain={selectedChain}
+                setSelectedChain={setSelectedChain}
+                customChains={customChains}
+              />
               <ContractAddressInput
                 contractAddress={contractAddress}
                 setContractAddress={setContractAddress}
@@ -51,7 +59,7 @@ const App = () => {
               </button>
             </form>
           </div>
-
+          <CustomChainForm onSave={customChain => saveCustomChain(customChain)} />
           <div className="text-l sm:text-2xl font-bold mt-2 text-center h-5">
             {isLoading && <span>Reading the slot (✿◡‿◡)</span>}
           </div>
