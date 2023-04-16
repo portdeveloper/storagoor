@@ -36,7 +36,8 @@ const ChainSelect: React.FC<ChainSelectProps> = ({ selectedChain, setSelectedCha
       >
         {availableChains.map((chain, index) => (
           <option key={index} value={chain}>
-            {customChains.find(customChain => customChain.rpcUrl === chain)?.name || `Chain ${index + 1}`}
+            {customChains.find(customChain => customChain.rpcUrl === chain)?.name ||
+              `${index == 0 ? "Sepolia" : index == 1 ? "Goerli" : "Mainnet"}`}
           </option>
         ))}
       </select>
